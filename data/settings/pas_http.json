@@ -1,0 +1,6 @@
+{
+ "pas_http_server_mode": "cherrypy",
+ "pas_http_site_title": "MediaProvider",
+ "pas_http_site_title_xhtml": "MediaProvider • <em>multimedia solution</em>",
+ "pas_http_site_version": ""
+}
