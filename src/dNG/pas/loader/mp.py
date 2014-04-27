@@ -41,11 +41,13 @@ from math import floor
 from time import time
 
 from dNG.pas.data.settings import Settings
+from dNG.pas.data.tasks.database import Database as DatabaseTasks
+from dNG.pas.data.tasks.memory import Memory as MemoryTasks
 from dNG.pas.loader.cli import Cli
 from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.net.bus.client import Client as BusClient
 from dNG.pas.net.bus.server import Server as BusServer
-from dNG.pas.net.http import Server as HttpServer
+from dNG.pas.net.http.server_implementation import ServerImplementation as HttpServer
 from dNG.pas.plugins.hooks import Hooks
 
 class Mp(Cli):
@@ -61,6 +63,8 @@ class Mp(Cli):
 :license:    http://www.direct-netware.de/redirect.py?licenses;gpl
              GNU General Public License 2
 	"""
+
+	# pylint: disable=unused-argument
 
 	def __init__(self):
 	#
@@ -83,10 +87,6 @@ Server thread
 		self.time_started = None
 		"""
 Timestamp of service initialisation
-		"""
-		self.upnp_control_point = None
-		"""
-UPnP ControlPoint
 		"""
 
 		self.arg_parser = ArgumentParser()
@@ -150,23 +150,34 @@ Callback for initialisation.
 
 			Hooks.load("http")
 			Hooks.load("mp")
+			Hooks.load("tasks")
 			Hooks.register("dNG.pas.Status.getUptime", self.get_uptime)
 			Hooks.register("dNG.pas.Status.stop", self.stop)
+
+			self.server = BusServer("mp_bus")
 			self.time_started = int(time())
 
 			http_server = HttpServer.get_instance()
-			self.server = BusServer("mp_bus")
 
 			if (http_server != None):
 			#
 				Hooks.register("dNG.pas.Status.startup", http_server.start)
 				Hooks.register("dNG.pas.Status.shutdown", http_server.stop)
 
-				self.upnp_control_point = NamedLoader.get_singleton("dNG.pas.net.upnp.ControlPoint")
-				Hooks.register("dNG.pas.Status.startup", self.upnp_control_point.start)
-				Hooks.register("dNG.pas.Status.shutdown", self.upnp_control_point.stop)
+				database_tasks = DatabaseTasks.get_instance()
+				Hooks.register("dNG.pas.Status.startup", database_tasks.start)
+				Hooks.register("dNG.pas.Status.shutdown", database_tasks.stop)
+
+				memory_tasks = MemoryTasks.get_instance()
+				Hooks.register("dNG.pas.Status.startup", memory_tasks.start)
+				Hooks.register("dNG.pas.Status.shutdown", memory_tasks.stop)
+
+				upnp_control_point = NamedLoader.get_singleton("dNG.pas.net.upnp.ControlPoint")
+				Hooks.register("dNG.pas.Status.startup", upnp_control_point.start)
+				Hooks.register("dNG.pas.Status.shutdown", upnp_control_point.stop)
 
 				Hooks.call("dNG.pas.Status.startup")
+
 				self.set_mainloop(self.server.run)
 			#
 		#
