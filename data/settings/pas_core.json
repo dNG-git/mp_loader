@@ -1,4 +1,20 @@
+# MediaProvider
+# A device centric multimedia solution
+#
+# This is the initial extended JSON configuration file. Comments are removed
+# if edited. Comments must be removed before reading this JSON file with an
+# unsupported JSON parser.
+
 {
+ # Log file configuration
+
+ # Global log level. Valid values are: debug, info, warning or error
  "pas_core_log_level": "info",
- "pas_core_log_name": "vpmc.log"
+
+ # "pas_core_log_pathname" is used for an absolute path to the log file.
+ # "pas_core_log_pathname": "/var/log/pas/mp.log"
+
+ # "pas_core_log_name" is the filename within the "log" directory. The
+ # default is "pas.log" written into the root directory of the installation.
+ "pas_core_log_name": "mp.log"
 }

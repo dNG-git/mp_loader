@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.loader.Mp
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 MediaProvider
 A device centric multimedia solution
 ----------------------------------------------------------------------------
@@ -33,11 +29,9 @@ http://www.direct-netware.de/redirect.py?licenses;gpl
 ----------------------------------------------------------------------------
 #echo(mpLoaderVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from argparse import ArgumentParser
-from math import floor
 from time import time
 
 from dNG.pas.data.settings import Settings
@@ -48,9 +42,10 @@ from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.net.bus.client import Client as BusClient
 from dNG.pas.net.bus.server import Server as BusServer
 from dNG.pas.net.http.server_implementation import ServerImplementation as HttpServer
-from dNG.pas.plugins.hooks import Hooks
+from dNG.pas.plugins.hook import Hook
+from .bus_mixin import BusMixin
 
-class Mp(Cli):
+class Mp(Cli, BusMixin):
 #
 	"""
 "Mp" manages the MediaProvider process.
@@ -75,6 +70,7 @@ Constructor __init__(Mp)
 		"""
 
 		Cli.__init__(self)
+		BusMixin.__init__(self)
 
 		self.cache_instance = None
 		"""
@@ -84,39 +80,19 @@ Cache instance
 		"""
 Server thread
 		"""
-		self.time_started = None
-		"""
-Timestamp of service initialisation
-		"""
 
 		self.arg_parser = ArgumentParser()
 		self.arg_parser.add_argument("--additionalSettings", action = "store", type = str, dest = "additional_settings")
 		self.arg_parser.add_argument("--stop", action = "store_true", dest = "stop")
 
-		Cli.register_run_callback(self._callback_run)
-		Cli.register_shutdown_callback(self._callback_exit)
+		Cli.register_run_callback(self._on_run)
+		Cli.register_shutdown_callback(self._on_shutdown)
 	#
 
-	def _callback_exit(self):
-	#
-		"""
-Callback for application exit.
-
-:since: v0.1.00
-		"""
-
-		if (self.server != None): self.stop()
-		Hooks.call("dNG.pas.Status.shutdown")
-
-		if (self.cache_instance != None): self.cache_instance.disable()
-		Hooks.free()
-		if (self.log_handler != None): self.log_handler.info("mp stopped listening")
-	#
-
-	def _callback_run(self, args):
+	def _on_run(self, args):
 	#
 		"""
-Callback for initialisation.
+Callback for execution.
 
 :param args: Parsed command line arguments
 
@@ -125,14 +101,21 @@ Callback for initialisation.
 
 		Settings.read_file("{0}/settings/pas_global.json".format(Settings.get("path_data")))
 		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
+		Settings.read_file("{0}/settings/pas_http.json".format(Settings.get("path_data")))
+		Settings.read_file("{0}/settings/pas_upnp.json".format(Settings.get("path_data")))
 		Settings.read_file("{0}/settings/mp/server.json".format(Settings.get("path_data")))
 		if (args.additional_settings != None): Settings.read_file(args.additional_settings, True)
 
 		if (args.stop):
 		#
 			client = BusClient("mp_bus")
+
+			pid = client.request("dNG.pas.Status.getOSPid")
 			client.request("dNG.pas.Status.stop")
+
 			client.disconnect()
+
+			self._wait_for_os_pid(pid)
 		#
 		else:
 		#
@@ -143,44 +126,60 @@ Callback for initialisation.
 
 			if (self.log_handler != None):
 			#
-				Hooks.set_log_handler(self.log_handler)
+				Hook.set_log_handler(self.log_handler)
 				NamedLoader.set_log_handler(self.log_handler)
-				self.log_handler.debug("#echo(__FILEPATH__)# -mp._callback_run(args)- (#echo(__LINE__)#)")
 			#
 
-			Hooks.load("http")
-			Hooks.load("mp")
-			Hooks.load("tasks")
-			Hooks.register("dNG.pas.Status.getUptime", self.get_uptime)
-			Hooks.register("dNG.pas.Status.stop", self.stop)
+			Hook.load("http")
+			Hook.load("mp")
+			Hook.load("tasks")
+			Hook.register("dNG.pas.Status.getOSPid", self.get_os_pid)
+			Hook.register("dNG.pas.Status.getTimeStarted", self.get_time_started)
+			Hook.register("dNG.pas.Status.getUptime", self.get_uptime)
+			Hook.register("dNG.pas.Status.stop", self.stop)
 
 			self.server = BusServer("mp_bus")
-			self.time_started = int(time())
+			self._set_time_started(time())
 
 			http_server = HttpServer.get_instance()
 
 			if (http_server != None):
 			#
-				Hooks.register("dNG.pas.Status.startup", http_server.start)
-				Hooks.register("dNG.pas.Status.shutdown", http_server.stop)
+				Hook.register("dNG.pas.Status.onStartup", http_server.start)
+				Hook.register("dNG.pas.Status.onShutdown", http_server.stop)
 
 				database_tasks = DatabaseTasks.get_instance()
-				Hooks.register("dNG.pas.Status.startup", database_tasks.start)
-				Hooks.register("dNG.pas.Status.shutdown", database_tasks.stop)
+				Hook.register("dNG.pas.Status.onStartup", database_tasks.start)
+				Hook.register("dNG.pas.Status.onShutdown", database_tasks.stop)
 
 				memory_tasks = MemoryTasks.get_instance()
-				Hooks.register("dNG.pas.Status.startup", memory_tasks.start)
-				Hooks.register("dNG.pas.Status.shutdown", memory_tasks.stop)
+				Hook.register("dNG.pas.Status.onStartup", memory_tasks.start)
+				Hook.register("dNG.pas.Status.onShutdown", memory_tasks.stop)
 
 				upnp_control_point = NamedLoader.get_singleton("dNG.pas.net.upnp.ControlPoint")
-				Hooks.register("dNG.pas.Status.startup", upnp_control_point.start)
-				Hooks.register("dNG.pas.Status.shutdown", upnp_control_point.stop)
+				Hook.register("dNG.pas.Status.onStartup", upnp_control_point.start)
+				Hook.register("dNG.pas.Status.onShutdown", upnp_control_point.stop)
 
-				Hooks.call("dNG.pas.Status.startup")
+				if (self.log_handler != None): self.log_handler.info("mp starts listening", context = "mp_server")
+				Hook.call("dNG.pas.Status.onStartup")
 
 				self.set_mainloop(self.server.run)
 			#
 		#
+	#
+
+	def _on_shutdown(self):
+	#
+		"""
+Callback for shutdown.
+
+:since: v0.1.00
+		"""
+
+		Hook.call("dNG.pas.Status.onShutdown")
+
+		if (self.cache_instance != None): self.cache_instance.disable()
+		Hook.free()
 	#
 
 	def stop(self, params = None, last_return = None):
@@ -199,39 +198,11 @@ Stops the running server instance.
 		#
 			self.server.stop()
 			self.server = None
+
+			if (self.log_handler != None): self.log_handler.info("mp stopped listening", context = "mp_server")
 		#
 
 		return last_return
-	#
-
-	def get_time_started(self, params = None, last_return = None):
-	#
-		"""
-Returns the time (timestamp) this service had been initialized.
-
-:param params: Parameter specified
-:param last_return: The return value from the last hook called.
-
-:return: (int) Unix timestamp
-:since:  v1.0.0
-		"""
-
-		return self.time_started
-	#
-
-	def get_uptime(self, params = None, last_return = None):
-	#
-		"""
-Returns the time in seconds since this service had been initialized.
-
-:param params: Parameter specified
-:param last_return: The return value from the last hook called.
-
-:return: (int) Uptime in seconds
-:since:  v0.1.00
-		"""
-
-		return int(floor(time() - self.time_started))
 	#
 #
 

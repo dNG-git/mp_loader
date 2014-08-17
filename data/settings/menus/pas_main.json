@@ -1,0 +1,38 @@
+[
+ {
+  "title_de": "Medienfreigaben verwalten",
+  "title_de_formal": "Medienfreigaben verwalten",
+  "title": "Manage media shares",
+
+  "type": "ilink",
+  "parameters": { "m": "mp" },
+  "forbidden_user_type": "gt"
+ },
+ {
+  "title_de": "Anmelden",
+  "title_de_formal": "Anmelden",
+  "title": "Log in",
+
+  "type": "ilink",
+  "parameters": { "m": "user", "s": "status", "a": "login" },
+  "required_user_type": "gt"
+ },
+ {
+  "title_de": "Account",
+  "title_de_formal": "Account",
+  "title": "Account",
+
+  "type": "ilink",
+  "parameters": { "m": "user", "a": "services" },
+  "forbidden_user_type": "gt"
+ },
+ {
+  "title_de": "Abmelden",
+  "title_de_formal": "Abmelden",
+  "title": "Log out",
+
+  "type": "ilink",
+  "parameters": { "m": "user", "s": "status", "a": "logout" },
+  "forbidden_user_type": "gt"
+ }
+]

@@ -1,6 +1,31 @@
+# MediaProvider
+# A device centric multimedia solution
+#
+# This is the initial extended JSON configuration file. Comments are removed
+# if edited. Comments must be removed before reading this JSON file with an
+# unsupported JSON parser.
+
 {
- "pas_http_server_mode": "cherrypy",
+ # HTTP server configuration
+
+ # Server implementation to be used. Valid values are: "CherryPy",
+ # "Standalone" and "Waitress"
+ "pas_http_server_implementation": "CherryPy",
+
+ # HTTP site configuration
+
+ # Menu configuration
+ "pas_http_site_menu_main": { "file": "data/settings/menus/pas_main.json" },
+
+ # Default HTTP page to show
+ "pas_http_site_page_default": {
+  "module": "user"
+ },
+
+ # Default HTTP site theme
+ "pas_http_site_theme_default": "mp",
+
+ # HTTP site title
  "pas_http_site_title": "MediaProvider",
- "pas_http_site_title_xhtml": "MediaProvider • <em>multimedia solution</em>",
- "pas_http_site_version": ""
+ "pas_http_site_title_xhtml": "MediaProvider • <em>multimedia solution</em>"
 }
