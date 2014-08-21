@@ -119,7 +119,7 @@ Callback for execution.
 		#
 		else:
 		#
-			self.cache_instance = NamedLoader.get_singleton("dNG.pas.data.Cache", False)
+			self.cache_instance = NamedLoader.get_singleton("dNG.pas.data.cache.Content", False)
 			if (self.cache_instance != None): Settings.set_cache_instance(self.cache_instance)
 
 			self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
