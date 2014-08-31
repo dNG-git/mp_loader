@@ -96,7 +96,7 @@ Callback for execution.
 
 :param args: Parsed command line arguments
 
-:since: v1.0.0
+:since: v0.1.00
 		"""
 
 		Settings.read_file("{0}/settings/pas_global.json".format(Settings.get("path_data")))

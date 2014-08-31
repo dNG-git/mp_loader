@@ -1,0 +1,2 @@
+-e git+http://git.direct-netware.de/mp/core/#egg=mp_core
+-e git+http://git.direct-netware.de/pas/bus/#egg=pas_bus
