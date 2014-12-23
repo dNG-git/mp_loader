@@ -44,7 +44,7 @@ try:
 #
 except Exception as handled_exception:
 #
-	if (mp != None):
+	if (mp is not None):
 	#
 		mp.error(handled_exception)
 		mp.stop()

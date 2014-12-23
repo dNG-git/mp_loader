@@ -11,8 +11,8 @@
  # Global log level. Valid values are: debug, info, warning or error
  "pas_core_log_level": "info",
 
- # "pas_core_log_pathname" is used for an absolute path to the log file.
- # "pas_core_log_pathname": "/var/log/pas/mp.log"
+ # "pas_core_log_path_name" is used for an absolute path to the log file.
+ # "pas_core_log_path_name": "/var/log/pas/mp.log"
 
  # "pas_core_log_name" is the filename within the "log" directory. The
  # default is "pas.log" written into the root directory of the installation.

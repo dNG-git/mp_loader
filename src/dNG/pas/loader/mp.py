@@ -42,6 +42,7 @@ from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.net.bus.client import Client as BusClient
 from dNG.pas.net.bus.server import Server as BusServer
 from dNG.pas.net.http.server_implementation import ServerImplementation as HttpServer
+from dNG.pas.net.upnp.control_point import ControlPoint
 from dNG.pas.plugins.hook import Hook
 from .bus_mixin import BusMixin
 
@@ -104,7 +105,7 @@ Callback for execution.
 		Settings.read_file("{0}/settings/pas_http.json".format(Settings.get("path_data")))
 		Settings.read_file("{0}/settings/pas_upnp.json".format(Settings.get("path_data")))
 		Settings.read_file("{0}/settings/mp/server.json".format(Settings.get("path_data")))
-		if (args.additional_settings != None): Settings.read_file(args.additional_settings, True)
+		if (args.additional_settings is not None): Settings.read_file(args.additional_settings, True)
 
 		if (args.stop):
 		#
@@ -120,11 +121,11 @@ Callback for execution.
 		else:
 		#
 			self.cache_instance = NamedLoader.get_singleton("dNG.pas.data.cache.Content", False)
-			if (self.cache_instance != None): Settings.set_cache_instance(self.cache_instance)
+			if (self.cache_instance is not None): Settings.set_cache_instance(self.cache_instance)
 
 			self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
 
-			if (self.log_handler != None):
+			if (self.log_handler is not None):
 			#
 				Hook.set_log_handler(self.log_handler)
 				NamedLoader.set_log_handler(self.log_handler)
@@ -143,7 +144,7 @@ Callback for execution.
 
 			http_server = HttpServer.get_instance()
 
-			if (http_server != None):
+			if (http_server is not None):
 			#
 				Hook.register("dNG.pas.Status.onStartup", http_server.start)
 				Hook.register("dNG.pas.Status.onShutdown", http_server.stop)
@@ -156,11 +157,11 @@ Callback for execution.
 				Hook.register("dNG.pas.Status.onStartup", memory_tasks.start)
 				Hook.register("dNG.pas.Status.onShutdown", memory_tasks.stop)
 
-				upnp_control_point = NamedLoader.get_singleton("dNG.pas.net.upnp.ControlPoint")
+				upnp_control_point = ControlPoint.get_instance()
 				Hook.register("dNG.pas.Status.onStartup", upnp_control_point.start)
 				Hook.register("dNG.pas.Status.onShutdown", upnp_control_point.stop)
 
-				if (self.log_handler != None): self.log_handler.info("mp starts listening", context = "mp_server")
+				if (self.log_handler is not None): self.log_handler.info("mp starts listening", context = "mp_server")
 				Hook.call("dNG.pas.Status.onStartup")
 
 				self.set_mainloop(self.server.run)
@@ -178,7 +179,7 @@ Callback for shutdown.
 
 		Hook.call("dNG.pas.Status.onShutdown")
 
-		if (self.cache_instance != None): self.cache_instance.disable()
+		if (self.cache_instance is not None): self.cache_instance.disable()
 		Hook.free()
 	#
 
@@ -194,12 +195,12 @@ Stops the running server instance.
 :since:  v0.1.00
 		"""
 
-		if (self.server != None):
+		if (self.server is not None):
 		#
 			self.server.stop()
 			self.server = None
 
-			if (self.log_handler != None): self.log_handler.info("mp stopped listening", context = "mp_server")
+			if (self.log_handler is not None): self.log_handler.info("mp stopped listening", context = "mp_server")
 		#
 
 		return last_return
