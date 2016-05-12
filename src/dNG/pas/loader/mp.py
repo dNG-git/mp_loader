@@ -84,6 +84,7 @@ Server thread
 
 		self.arg_parser = ArgumentParser()
 		self.arg_parser.add_argument("--additionalSettings", action = "store", type = str, dest = "additional_settings")
+		self.arg_parser.add_argument("--reloadPlugins", action = "store_true", dest = "reload_plugins")
 		self.arg_parser.add_argument("--stop", action = "store_true", dest = "stop")
 
 		Cli.register_run_callback(self._on_run)
@@ -107,7 +108,12 @@ Callback for execution.
 		Settings.read_file("{0}/settings/mp/server.json".format(Settings.get("path_data")))
 		if (args.additional_settings is not None): Settings.read_file(args.additional_settings, True)
 
-		if (args.stop):
+		if (args.reload_plugins):
+		#
+			client = BusClient("mp_bus")
+			client.request("dNG.pas.Plugins.reload")
+		#
+		elif (args.stop):
 		#
 			client = BusClient("mp_bus")
 
