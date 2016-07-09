@@ -34,16 +34,17 @@ https://www.direct-netware.de/redirect?licenses;gpl
 from argparse import ArgumentParser
 from time import time
 
-from dNG.pas.data.settings import Settings
-from dNG.pas.data.tasks.database import Database as DatabaseTasks
-from dNG.pas.data.tasks.memory import Memory as MemoryTasks
-from dNG.pas.loader.cli import Cli
-from dNG.pas.module.named_loader import NamedLoader
-from dNG.pas.net.bus.client import Client as BusClient
-from dNG.pas.net.bus.server import Server as BusServer
-from dNG.pas.net.http.server_implementation import ServerImplementation as HttpServer
-from dNG.pas.net.upnp.control_point import ControlPoint
-from dNG.pas.plugins.hook import Hook
+from dNG.data.settings import Settings
+from dNG.data.tasks.database import Database as DatabaseTasks
+from dNG.data.tasks.memory import Memory as MemoryTasks
+from dNG.loader.cli import Cli
+from dNG.module.named_loader import NamedLoader
+from dNG.net.bus.client import Client as BusClient
+from dNG.net.bus.server import Server as BusServer
+from dNG.net.http.server_implementation import ServerImplementation as HttpServer
+from dNG.net.upnp.control_point import ControlPoint
+from dNG.plugins.hook import Hook
+
 from .bus_mixin import BusMixin
 
 class Mp(Cli, BusMixin):
@@ -51,11 +52,11 @@ class Mp(Cli, BusMixin):
 	"""
 "Mp" manages the MediaProvider process.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
-:package:    vp
+:package:    mp
 :subpackage: loader
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;gpl
              GNU General Public License 2
 	"""
@@ -67,7 +68,7 @@ class Mp(Cli, BusMixin):
 		"""
 Constructor __init__(Mp)
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Cli.__init__(self)
@@ -98,7 +99,7 @@ Callback for execution.
 
 :param args: Parsed command line arguments
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Settings.read_file("{0}/settings/pas_global.json".format(Settings.get("path_data")))
@@ -124,10 +125,10 @@ Callback for execution.
 		#
 		else:
 		#
-			self.cache_instance = NamedLoader.get_singleton("dNG.pas.data.cache.Content", False)
+			self.cache_instance = NamedLoader.get_singleton("dNG.data.cache.Content", False)
 			if (self.cache_instance is not None): Settings.set_cache_instance(self.cache_instance)
 
-			self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
+			self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 
 			if (self.log_handler is not None):
 			#
@@ -178,7 +179,7 @@ Callback for execution.
 		"""
 Callback for shutdown.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Hook.call("dNG.pas.Status.onShutdown")
@@ -196,7 +197,7 @@ Stops the running server instance.
 :param last_return: The return value from the last hook called.
 
 :return: (None) None to stop communication after this call
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (self.server is not None):

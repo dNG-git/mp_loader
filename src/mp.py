@@ -32,7 +32,8 @@ https://www.direct-netware.de/redirect?licenses;gpl
 #echo(__FILEPATH__)#
 """
 
-from dNG.pas.loader.mp import Mp
+from dNG.loader.mp import Mp
+
 import sys
 
 mp = None
