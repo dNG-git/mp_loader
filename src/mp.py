@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 MediaProvider
@@ -39,18 +38,11 @@ import sys
 mp = None
 
 try:
-#
-	mp = Mp()
-	mp.run()
-#
+    mp = Mp()
+    mp.run()
 except Exception as handled_exception:
+    if (mp is not None):
+        mp.error(handled_exception)
+        mp.stop()
+    else: sys.stderr.write("{0!r}".format(sys.exc_info()))
 #
-	if (mp is not None):
-	#
-		mp.error(handled_exception)
-		mp.stop()
-	#
-	else: sys.stderr.write("{0!r}".format(sys.exc_info()))
-#
-
-##j## EOF

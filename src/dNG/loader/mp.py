@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 MediaProvider
@@ -48,8 +47,7 @@ from dNG.plugins.hook import Hook
 from .bus_mixin import BusMixin
 
 class Mp(Cli, BusMixin):
-#
-	"""
+    """
 "Mp" manages the MediaProvider process.
 
 :author:     direct Netware Group et al.
@@ -59,138 +57,127 @@ class Mp(Cli, BusMixin):
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;gpl
              GNU General Public License 2
-	"""
+    """
 
-	# pylint: disable=unused-argument
+    # pylint: disable=unused-argument
 
-	def __init__(self):
-	#
-		"""
+    def __init__(self):
+        """
 Constructor __init__(Mp)
 
 :since: v0.2.00
-		"""
+        """
 
-		Cli.__init__(self)
-		BusMixin.__init__(self)
+        Cli.__init__(self)
+        BusMixin.__init__(self)
 
-		self.cache_instance = None
-		"""
+        self.cache_instance = None
+        """
 Cache instance
-		"""
-		self.server = None
-		"""
+        """
+        self.server = None
+        """
 Server thread
-		"""
+        """
 
-		self.arg_parser = ArgumentParser()
-		self.arg_parser.add_argument("--additionalSettings", action = "store", type = str, dest = "additional_settings")
-		self.arg_parser.add_argument("--reloadPlugins", action = "store_true", dest = "reload_plugins")
-		self.arg_parser.add_argument("--stop", action = "store_true", dest = "stop")
+        self.arg_parser = ArgumentParser()
+        self.arg_parser.add_argument("--additionalSettings", action = "store", type = str, dest = "additional_settings")
+        self.arg_parser.add_argument("--reloadPlugins", action = "store_true", dest = "reload_plugins")
+        self.arg_parser.add_argument("--stop", action = "store_true", dest = "stop")
 
-		Cli.register_run_callback(self._on_run)
-		Cli.register_shutdown_callback(self._on_shutdown)
-	#
+        Cli.register_run_callback(self._on_run)
+        Cli.register_shutdown_callback(self._on_shutdown)
+    #
 
-	def _on_run(self, args):
-	#
-		"""
+    def _on_run(self, args):
+        """
 Callback for execution.
 
 :param args: Parsed command line arguments
 
 :since: v0.2.00
-		"""
+        """
 
-		Settings.read_file("{0}/settings/pas_global.json".format(Settings.get("path_data")))
-		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
-		Settings.read_file("{0}/settings/pas_http.json".format(Settings.get("path_data")))
-		Settings.read_file("{0}/settings/pas_upnp.json".format(Settings.get("path_data")))
-		Settings.read_file("{0}/settings/mp/server.json".format(Settings.get("path_data")))
-		if (args.additional_settings is not None): Settings.read_file(args.additional_settings, True)
+        Settings.read_file("{0}/settings/pas_global.json".format(Settings.get("path_data")))
+        Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
+        Settings.read_file("{0}/settings/pas_http.json".format(Settings.get("path_data")))
+        Settings.read_file("{0}/settings/pas_upnp.json".format(Settings.get("path_data")))
+        Settings.read_file("{0}/settings/mp/server.json".format(Settings.get("path_data")))
+        if (args.additional_settings is not None): Settings.read_file(args.additional_settings, True)
 
-		if (args.reload_plugins):
-		#
-			client = BusClient("mp_bus")
-			client.request("dNG.pas.Plugins.reload")
-		#
-		elif (args.stop):
-		#
-			client = BusClient("mp_bus")
+        if (args.reload_plugins):
+            client = BusClient("mp_bus")
+            client.request("dNG.pas.Plugins.reload")
+        elif (args.stop):
+            client = BusClient("mp_bus")
 
-			pid = client.request("dNG.pas.Status.getOSPid")
-			client.request("dNG.pas.Status.stop")
+            pid = client.request("dNG.pas.Status.getOSPid")
+            client.request("dNG.pas.Status.stop")
 
-			self._wait_for_os_pid(pid)
-		#
-		else:
-		#
-			self.cache_instance = NamedLoader.get_singleton("dNG.data.cache.Content", False)
-			if (self.cache_instance is not None): Settings.set_cache_instance(self.cache_instance)
+            self._wait_for_os_pid(pid)
+        else:
+            self.cache_instance = NamedLoader.get_singleton("dNG.data.cache.Content", False)
+            if (self.cache_instance is not None): Settings.set_cache_instance(self.cache_instance)
 
-			self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
+            self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 
-			if (self.log_handler is not None):
-			#
-				Hook.set_log_handler(self.log_handler)
-				NamedLoader.set_log_handler(self.log_handler)
-			#
+            if (self.log_handler is not None):
+                Hook.set_log_handler(self.log_handler)
+                NamedLoader.set_log_handler(self.log_handler)
+            #
 
-			Hook.load("http")
-			Hook.load("mp")
-			Hook.load("tasks")
-			Hook.register("dNG.pas.Status.getOSPid", self.get_os_pid)
-			Hook.register("dNG.pas.Status.getTimeStarted", self.get_time_started)
-			Hook.register("dNG.pas.Status.getUptime", self.get_uptime)
-			Hook.register("dNG.pas.Status.stop", self.stop)
+            Hook.load("http")
+            Hook.load("mp")
+            Hook.load("tasks")
+            Hook.register("dNG.pas.Status.getOSPid", self.get_os_pid)
+            Hook.register("dNG.pas.Status.getTimeStarted", self.get_time_started)
+            Hook.register("dNG.pas.Status.getUptime", self.get_uptime)
+            Hook.register("dNG.pas.Status.stop", self.stop)
 
-			self.server = BusServer("mp_bus")
-			self._set_time_started(time())
+            self.server = BusServer("mp_bus")
+            self._set_time_started(time())
 
-			http_server = HttpServer.get_instance()
+            http_server = HttpServer.get_instance()
 
-			if (http_server is not None):
-			#
-				Hook.register("dNG.pas.Status.onStartup", http_server.start)
-				Hook.register("dNG.pas.Status.onShutdown", http_server.stop)
+            if (http_server is not None):
+                Hook.register("dNG.pas.Status.onStartup", http_server.start)
+                Hook.register("dNG.pas.Status.onShutdown", http_server.stop)
 
-				database_tasks = DatabaseTasks.get_instance()
-				Hook.register("dNG.pas.Status.onStartup", database_tasks.start)
-				Hook.register("dNG.pas.Status.onShutdown", database_tasks.stop)
+                database_tasks = DatabaseTasks.get_instance()
+                Hook.register("dNG.pas.Status.onStartup", database_tasks.start)
+                Hook.register("dNG.pas.Status.onShutdown", database_tasks.stop)
 
-				memory_tasks = MemoryTasks.get_instance()
-				Hook.register("dNG.pas.Status.onStartup", memory_tasks.start)
-				Hook.register("dNG.pas.Status.onShutdown", memory_tasks.stop)
+                memory_tasks = MemoryTasks.get_instance()
+                Hook.register("dNG.pas.Status.onStartup", memory_tasks.start)
+                Hook.register("dNG.pas.Status.onShutdown", memory_tasks.stop)
 
-				upnp_control_point = ControlPoint.get_instance()
-				Hook.register("dNG.pas.Status.onStartup", upnp_control_point.start)
-				Hook.register("dNG.pas.Status.onShutdown", upnp_control_point.stop)
+                upnp_control_point = ControlPoint.get_instance()
+                Hook.register("dNG.pas.Status.onStartup", upnp_control_point.start)
+                Hook.register("dNG.pas.Status.onShutdown", upnp_control_point.stop)
 
-				if (self.log_handler is not None): self.log_handler.info("mp starts listening", context = "mp_server")
-				Hook.call("dNG.pas.Status.onStartup")
+                if (self.log_handler is not None): self.log_handler.info("mp starts listening", context = "mp_server")
+                Hook.call("dNG.pas.Status.onStartup")
 
-				self.set_mainloop(self.server.run)
-			#
-		#
-	#
+                self.set_mainloop(self.server.run)
+            #
+        #
+    #
 
-	def _on_shutdown(self):
-	#
-		"""
+    def _on_shutdown(self):
+        """
 Callback for shutdown.
 
 :since: v0.2.00
-		"""
+        """
 
-		Hook.call("dNG.pas.Status.onShutdown")
+        Hook.call("dNG.pas.Status.onShutdown")
 
-		if (self.cache_instance is not None): self.cache_instance.disable()
-		Hook.free()
-	#
+        if (self.cache_instance is not None): self.cache_instance.disable()
+        Hook.free()
+    #
 
-	def stop(self, params = None, last_return = None):
-	#
-		"""
+    def stop(self, params = None, last_return = None):
+        """
 Stops the running server instance.
 
 :param params: Parameter specified
@@ -198,18 +185,15 @@ Stops the running server instance.
 
 :return: (None) None to stop communication after this call
 :since:  v0.2.00
-		"""
+        """
 
-		if (self.server is not None):
-		#
-			self.server.stop()
-			self.server = None
+        if (self.server is not None):
+            self.server.stop()
+            self.server = None
 
-			if (self.log_handler is not None): self.log_handler.info("mp stopped listening", context = "mp_server")
-		#
+            if (self.log_handler is not None): self.log_handler.info("mp stopped listening", context = "mp_server")
+        #
 
-		return last_return
-	#
+        return last_return
+    #
 #
-
-##j## EOF
