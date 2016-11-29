@@ -116,15 +116,15 @@ Callback for execution.
 
             self._wait_for_os_pid(pid)
         else:
-            self.cache_instance = NamedLoader.get_singleton("dNG.data.cache.Content", False)
-            if (self.cache_instance is not None): Settings.set_cache_instance(self.cache_instance)
-
             self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 
             if (self.log_handler is not None):
                 Hook.set_log_handler(self.log_handler)
                 NamedLoader.set_log_handler(self.log_handler)
             #
+
+            self.cache_instance = NamedLoader.get_singleton("dNG.data.cache.Content", False)
+            if (self.cache_instance is not None): Settings.set_cache_instance(self.cache_instance)
 
             Hook.load("http")
             Hook.load("mp")
